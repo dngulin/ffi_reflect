@@ -1,0 +1,13 @@
+[package]
+name = "ffi_reflect"
+version = "0.1.0"
+authors = ["Danil Gulin <dngulin@yandex.ru>"]
+edition = "2021"
+
+# [lib]
+# proc-macro = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ffi_reflect_derive = {path = "ffi_reflect_derive"}
