@@ -21,7 +21,7 @@ pub enum SomeEnum {
 #[derive(FfiReflect)]
 #[repr(C)]
 pub struct Baz {
-    pub a : Foo,
+    pub a: Foo,
     pub b: Bar,
     pub c: SomeEnum,
     pub d: [SomeEnum; 10],
