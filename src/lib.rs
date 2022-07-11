@@ -7,6 +7,7 @@ pub enum FfiType<'x> {
     Primitive(FfiPrimitive),
     Enum(FfiEnum<'x>),
     Struct(FfiStruct<'x>),
+    Union(FfiStruct<'x>),
     Array(FfiArray<'x>)
 }
 

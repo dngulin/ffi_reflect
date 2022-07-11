@@ -49,7 +49,15 @@ fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> pro
 
             panic!("FfiReflect derive macro only works on enums with [repr(int)]")
         },
-        _ => panic!("FfiReflect derive macro only works on structs and enums"),
+        Data::Union(u) => {
+            if let Some(repr) = get_repr_type(attrs) {
+                if repr.as_str() == "C" {
+                    return get_union_type_expr(u, type_expr);
+                }
+            }
+
+            panic!("FfiReflect derive macro only works on unions with [repr(C)]");
+        },
     }
 }
 
@@ -111,6 +119,38 @@ fn get_struct_type_expr(s: &DataStruct, type_expr: &Ident) -> proc_macro2::Token
         const TYPE_SIZE : usize = ::core::mem::size_of::<#type_expr>();
         const TYPE_ALIGN : usize = ::core::mem::align_of::<#type_expr>();
         const TYPE_INFO : ::ffi_reflect::FfiType<'static> = ::ffi_reflect::FfiType::Struct(::ffi_reflect::FfiStruct{
+            name: #name_expr,
+            size: TYPE_SIZE,
+            align: TYPE_ALIGN,
+            fields: &[
+                #(#field_exprs),*
+            ],
+        });
+        &TYPE_INFO
+    })
+}
+
+fn get_union_type_expr(u: &DataUnion, type_expr: &Ident) -> proc_macro2::TokenStream {
+    let mut field_exprs = Vec::new();
+
+    for field in u.fields.named.iter() {
+        let field_name_expr = Literal::string(&field.ident.as_ref().unwrap().to_string());
+        let field_type_expr = get_inner_type_expr(&field.ty);
+
+        field_exprs.push(quote_spanned!(field.span() => {
+                    ::ffi_reflect::FfiStructField {
+                        field_name: #field_name_expr,
+                        field_type: #field_type_expr
+                    }
+                }));
+    }
+
+    let name_expr = Literal::string(&type_expr.to_string());
+
+    quote_spanned!(u.fields.span() => {
+        const TYPE_SIZE : usize = ::core::mem::size_of::<#type_expr>();
+        const TYPE_ALIGN : usize = ::core::mem::align_of::<#type_expr>();
+        const TYPE_INFO : ::ffi_reflect::FfiType<'static> = ::ffi_reflect::FfiType::Union(::ffi_reflect::FfiStruct{
             name: #name_expr,
             size: TYPE_SIZE,
             align: TYPE_ALIGN,
