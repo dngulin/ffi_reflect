@@ -49,15 +49,30 @@ pub struct Baz {
     pub d: [SomeEnum; 10],
     pub e: [Bar; 2],
     pub f: [f64; 7],
-    pub g: VecUnion
+    pub g: VecUnion,
+    pub h: *const Bar,
+    pub i: *mut bool,
+    pub j: *const Baz,
+    pub k: *const *mut i64
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ffi_reflect::FfiType;
 
     #[test]
     fn smoke() {
-        println!("{:#?}", Baz::ffi_reflect())
+        let reflect = Baz::ffi_reflect();
+        println!("{:#?}", reflect);
+
+        if let FfiType::Struct(s) = reflect {
+            for field in s.fields {
+                if let FfiType::Pointer(p) = field.field_type {
+                    println!("pointer type of the field `{}`:", field.field_name);
+                    println!("{:#?}", (p.get_type)());
+                }
+            }
+        }
     }
 }

@@ -178,22 +178,50 @@ fn get_inner_type_expr(t: &Type) -> proc_macro2::TokenStream {
                     item_count: #item_count_expr,
                 })
             })
-        }
+        },
         Type::Path(p) => {
-            if let Some(seg) = p.path.segments.last() {
-                let last_seg_string = seg.ident.to_string();
-                let last_seg_str = last_seg_string.as_str();
+            let last_seg_string = p.path.segments.last().unwrap().ident.to_string();
+            let last_seg_str = last_seg_string.as_str();
 
-                return if PRIMITIVES.contains(&last_seg_str) {
-                    get_primitive_type_expr(t.span(), last_seg_str)
-                } else {
-                    quote_spanned!(t.span() => #t::ffi_reflect())
-                }
+            return if PRIMITIVES.contains(&last_seg_str) {
+                get_primitive_type_expr(t.span(), last_seg_str)
+            } else {
+                quote_spanned!(t.span() => #t::ffi_reflect())
             }
-        }
+        },
+        Type::Ptr(ptr) => {
+            return get_inner_ptr_type_expr(ptr)
+        },
         _ => {}
     }
     panic!("Failed to impl type info")
+}
+
+fn get_inner_ptr_type_expr(ptr: &TypePtr) -> proc_macro2::TokenStream {
+    let is_const = ptr.const_token.is_some();
+    let t = ptr.elem.as_ref();
+    let type_expr = match t {
+        Type::Array(_) | Type::Ptr(_) => {
+            get_inner_type_expr(ptr.elem.as_ref())
+        },
+        Type::Path(p) => {
+            let last_seg_string = p.path.segments.last().unwrap().ident.to_string();
+            let last_seg_str = last_seg_string.as_str();
+            if PRIMITIVES.contains(&last_seg_str) {
+                get_primitive_type_expr(ptr.span(), last_seg_str)
+            } else {
+                quote_spanned!(t.span() => {#p::ffi_reflect()})
+            }
+        },
+        _ => { panic!("Failed to unwrap pointer") }
+    };
+
+    quote_spanned!(t.span() => {
+        &::ffi_reflect::FfiType::Pointer(::ffi_reflect::FfiPointer{
+            get_type: || #type_expr,
+            is_const: #is_const
+        })
+    })
 }
 
 fn get_primitive_type_expr(span: Span, type_name: &str) -> proc_macro2::TokenStream {

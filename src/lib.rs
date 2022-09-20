@@ -8,7 +8,8 @@ pub enum FfiType<'x> {
     Enum(FfiEnum<'x>),
     Struct(FfiStruct<'x>),
     Union(FfiStruct<'x>),
-    Array(FfiArray<'x>)
+    Array(FfiArray<'x>),
+    Pointer(FfiPointer<'x>),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -70,4 +71,10 @@ pub struct FfiArray<'x> {
     pub name: &'x str,
     pub item_type: &'x FfiType<'x>,
     pub item_count: usize
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct FfiPointer<'x> {
+    pub get_type: fn() -> &'x FfiType<'x>,
+    pub is_const: bool,
 }
