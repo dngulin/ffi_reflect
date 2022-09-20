@@ -79,7 +79,7 @@ fn get_repr_type(attributes: &[Attribute]) -> Option<String> {
 }
 
 fn get_struct_type_expr(s: &DataStruct, type_expr: &Ident) -> proc_macro2::TokenStream {
-    let mut field_exprs = Vec::new();
+    let mut field_exprs = Vec::with_capacity(s.fields.len());
 
     match &s.fields {
         Fields::Named(fields) => {
@@ -131,7 +131,7 @@ fn get_struct_type_expr(s: &DataStruct, type_expr: &Ident) -> proc_macro2::Token
 }
 
 fn get_union_type_expr(u: &DataUnion, type_expr: &Ident) -> proc_macro2::TokenStream {
-    let mut field_exprs = Vec::new();
+    let mut field_exprs = Vec::with_capacity(u.fields.named.len());
 
     for field in u.fields.named.iter() {
         let field_name_expr = Literal::string(&field.ident.as_ref().unwrap().to_string());
@@ -264,7 +264,7 @@ fn get_transparent_type_expr(s: &DataStruct) -> proc_macro2::TokenStream {
 }
 
 fn get_enum_type_expr(e: &DataEnum, type_expr: &Ident, repr: &str) -> proc_macro2::TokenStream {
-    let mut item_exprs = Vec::new();
+    let mut item_exprs = Vec::with_capacity(e.variants.len());
 
     for variant in e.variants.iter() {
         let variant_name_expr = Literal::string(&variant.ident.to_string());
