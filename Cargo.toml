@@ -1,13 +1,14 @@
 [package]
 name = "ffi_reflect"
-version = "0.1.0"
-authors = ["Danil Gulin <dngulin@yandex.ru>"]
+version = "1.0.0"
+authors = ["Danil Gulin <d.nk.gulin@gmail.com>"]
 edition = "2021"
-
-# [lib]
-# proc-macro = true
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Provides a derive macro that genreates a reflection method for C-comaptible types"
+repository = "https://github.com/dngulin/ffi_reflect"
+license = "MIT"
+readme = "README.md"
+keywords = ["ffi"]
+categories = ["development-tools::ffi"]
 
 [dependencies]
 ffi_reflect_derive = {path = "ffi_reflect_derive"}
