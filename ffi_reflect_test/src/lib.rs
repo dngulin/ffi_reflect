@@ -8,14 +8,14 @@ pub struct Foo(f32);
 #[repr(C)]
 pub struct Bar {
     pub f1: i64,
-    pub f2: i8
+    pub f2: i8,
 }
 
 #[derive(Copy, Clone, FfiReflect)]
 #[repr(u8)]
 pub enum SomeEnum {
     A = 42,
-    B = 17
+    B = 17,
 }
 
 #[derive(Copy, Clone, FfiReflect)]
@@ -53,7 +53,7 @@ pub struct Baz {
     pub h: *const Bar,
     pub i: *mut bool,
     pub j: *const Baz,
-    pub k: *const *mut i64
+    pub k: *const *mut i64,
 }
 
 #[cfg(test)]

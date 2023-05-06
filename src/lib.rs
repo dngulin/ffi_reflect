@@ -63,14 +63,14 @@ pub struct FfiStruct<'x> {
     pub name: &'x str,
     pub size: usize,
     pub align: usize,
-    pub fields: &'x [FfiStructField<'x>]
+    pub fields: &'x [FfiStructField<'x>],
 }
 
 /// A struct representing a struct field
 #[derive(Clone, Copy, Debug)]
 pub struct FfiStructField<'x> {
     pub field_name: &'x str,
-    pub field_type: &'x FfiType<'x>
+    pub field_type: &'x FfiType<'x>,
 }
 
 /// A struct representing a C-compatible array
@@ -78,7 +78,7 @@ pub struct FfiStructField<'x> {
 pub struct FfiArray<'x> {
     pub name: &'x str,
     pub item_type: &'x FfiType<'x>,
-    pub item_count: usize
+    pub item_count: usize,
 }
 
 /// A struct representing a C-compatible pointer type

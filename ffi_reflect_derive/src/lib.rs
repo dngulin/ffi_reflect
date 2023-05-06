@@ -1,11 +1,12 @@
 use proc_macro2::{Literal, Span};
 use quote::{quote, quote_spanned, ToTokens};
-use syn::*;
-use syn::spanned::Spanned;
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
+use syn::*;
 
-
-const PRIMITIVES : &[&str] = &["bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64"];
+const PRIMITIVES: &[&str] = &[
+    "bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64",
+];
 
 #[proc_macro_derive(FfiReflect)]
 pub fn derive_ffi_reflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -25,7 +26,11 @@ pub fn derive_ffi_reflect(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     proc_macro::TokenStream::from(expanded)
 }
 
-fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> proc_macro2::TokenStream {
+fn get_ffi_type_expr(
+    data: &Data,
+    attrs: &[Attribute],
+    type_expr: &Ident,
+) -> proc_macro2::TokenStream {
     match data {
         Data::Struct(s) => {
             if let Some(repr) = get_repr_type(attrs) {
@@ -37,7 +42,7 @@ fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> pro
             }
 
             panic!("FfiReflect derive macro only works on structs with [repr(C)] or [repr(transparent)]")
-        },
+        }
         Data::Enum(e) => {
             let enum_reprs = ["u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64"];
             if let Some(repr) = get_repr_type(attrs) {
@@ -48,7 +53,7 @@ fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> pro
             }
 
             panic!("FfiReflect derive macro only works on enums with [repr(int)]")
-        },
+        }
         Data::Union(u) => {
             if let Some(repr) = get_repr_type(attrs) {
                 if repr.as_str() == "C" {
@@ -57,7 +62,7 @@ fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> pro
             }
 
             panic!("FfiReflect derive macro only works on unions with [repr(C)]");
-        },
+        }
     }
 }
 
@@ -74,7 +79,7 @@ fn get_repr_type(attributes: &[Attribute]) -> Option<String> {
                 }
                 if let Some(Meta::Path(first)) = nested.first() {
                     if let Some(ident) = first.get_ident() {
-                        return Some(ident.to_string())
+                        return Some(ident.to_string());
                     }
                 }
             }
@@ -99,7 +104,6 @@ fn get_struct_type_expr(s: &DataStruct, type_expr: &Ident) -> proc_macro2::Token
                     }
                 }));
             }
-
         }
         Fields::Unnamed(fields) => {
             for (index, field) in fields.unnamed.iter().enumerate() {
@@ -113,8 +117,7 @@ fn get_struct_type_expr(s: &DataStruct, type_expr: &Ident) -> proc_macro2::Token
                     }
                 }));
             }
-
-        },
+        }
         Fields::Unit => panic!("Unit structs can not derive FfiReflect"),
     };
 
@@ -143,11 +146,11 @@ fn get_union_type_expr(u: &DataUnion, type_expr: &Ident) -> proc_macro2::TokenSt
         let field_type_expr = get_inner_type_expr(&field.ty);
 
         field_exprs.push(quote_spanned!(field.span() => {
-                    ::ffi_reflect::FfiStructField {
-                        field_name: #field_name_expr,
-                        field_type: #field_type_expr
-                    }
-                }));
+            ::ffi_reflect::FfiStructField {
+                field_name: #field_name_expr,
+                field_type: #field_type_expr
+            }
+        }));
     }
 
     let name_expr = Literal::string(&type_expr.to_string());
@@ -182,8 +185,8 @@ fn get_inner_type_expr(t: &Type) -> proc_macro2::TokenStream {
                     item_type: #item_type_expr,
                     item_count: #item_count_expr,
                 })
-            })
-        },
+            });
+        }
         Type::Path(p) => {
             let last_seg_string = p.path.segments.last().unwrap().ident.to_string();
             let last_seg_str = last_seg_string.as_str();
@@ -192,11 +195,9 @@ fn get_inner_type_expr(t: &Type) -> proc_macro2::TokenStream {
                 get_primitive_type_expr(t.span(), last_seg_str)
             } else {
                 quote_spanned!(t.span() => #t::ffi_reflect())
-            }
-        },
-        Type::Ptr(ptr) => {
-            return get_inner_ptr_type_expr(ptr)
-        },
+            };
+        }
+        Type::Ptr(ptr) => return get_inner_ptr_type_expr(ptr),
         _ => {}
     }
     panic!("Failed to impl type info")
@@ -206,9 +207,7 @@ fn get_inner_ptr_type_expr(ptr: &TypePtr) -> proc_macro2::TokenStream {
     let is_const = ptr.const_token.is_some();
     let t = ptr.elem.as_ref();
     let type_expr = match t {
-        Type::Array(_) | Type::Ptr(_) => {
-            get_inner_type_expr(ptr.elem.as_ref())
-        },
+        Type::Array(_) | Type::Ptr(_) => get_inner_type_expr(ptr.elem.as_ref()),
         Type::Path(p) => {
             let last_seg_string = p.path.segments.last().unwrap().ident.to_string();
             let last_seg_str = last_seg_string.as_str();
@@ -217,8 +216,10 @@ fn get_inner_ptr_type_expr(ptr: &TypePtr) -> proc_macro2::TokenStream {
             } else {
                 quote_spanned!(t.span() => {#p::ffi_reflect()})
             }
-        },
-        _ => { panic!("Failed to unwrap pointer") }
+        }
+        _ => {
+            panic!("Failed to unwrap pointer")
+        }
     };
 
     quote_spanned!(t.span() => {
@@ -231,25 +232,47 @@ fn get_inner_ptr_type_expr(ptr: &TypePtr) -> proc_macro2::TokenStream {
 
 fn get_primitive_type_expr(span: Span, type_name: &str) -> proc_macro2::TokenStream {
     match type_name {
-        "bool" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::BOOL)),
-        "u8" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U8)),
-        "u16" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U16)),
-        "u32" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U32)),
-        "u64" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U64)),
-        "i8" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I8)),
-        "i16" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I16)),
-        "i32" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I32)),
-        "i64" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I64)),
-        "f32" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::F32)),
-        "f64" => quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::F64)),
-        _ => unreachable!()
+        "bool" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::BOOL))
+        }
+        "u8" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U8))
+        }
+        "u16" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U16))
+        }
+        "u32" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U32))
+        }
+        "u64" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::U64))
+        }
+        "i8" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I8))
+        }
+        "i16" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I16))
+        }
+        "i32" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I32))
+        }
+        "i64" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::I64))
+        }
+        "f32" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::F32))
+        }
+        "f64" => {
+            quote_spanned!(span => &::ffi_reflect::FfiType::Primitive(::ffi_reflect::FfiPrimitive::F64))
+        }
+        _ => unreachable!(),
     }
 }
 
 fn get_array_type_name(t: &Type, len_expr: &Expr) -> String {
     if let Expr::Lit(lit) = len_expr {
         if let Lit::Int(int) = &lit.lit {
-            let len : usize = int.base10_parse().unwrap();
+            let len: usize = int.base10_parse().unwrap();
             let type_name = get_type_name(t);
             return format!("ArrayOf{}{}", len, type_name);
         }
@@ -262,9 +285,9 @@ fn get_type_name(t: &Type) -> String {
         Type::Array(a) => return get_array_type_name(a.elem.as_ref(), &a.len),
         Type::Path(p) => {
             if let Some(seg) = p.path.segments.last() {
-                return seg.ident.to_string()
+                return seg.ident.to_string();
             }
-        },
+        }
         _ => {}
     }
     panic!("Failed to get type name")
@@ -278,12 +301,12 @@ fn get_transparent_type_expr(s: &DataStruct) -> proc_macro2::TokenStream {
     let field = match &s.fields {
         Fields::Named(fields) => fields.named.first().unwrap(),
         Fields::Unnamed(fields) => fields.unnamed.first().unwrap(),
-        _ => unreachable!()
+        _ => unreachable!(),
     };
 
     let type_seg = match &field.ty {
         Type::Path(p) => p.path.segments.first().unwrap(),
-        _ => unreachable!()
+        _ => unreachable!(),
     };
 
     let type_string = type_seg.ident.to_string();
@@ -301,7 +324,9 @@ fn get_enum_type_expr(e: &DataEnum, type_expr: &Ident, repr: &str) -> proc_macro
 
     for variant in e.variants.iter() {
         let variant_name_expr = Literal::string(&variant.ident.to_string());
-        let (_, variant_value_expr) = &variant.discriminant.as_ref()
+        let (_, variant_value_expr) = &variant
+            .discriminant
+            .as_ref()
             .expect("All enum values should be assigned for deriving FfiReflect");
 
         let value_literal = Literal::string(&variant_value_expr.into_token_stream().to_string());
@@ -332,13 +357,13 @@ fn get_enum_type_expr(e: &DataEnum, type_expr: &Ident, repr: &str) -> proc_macro
 fn get_underlying_type_expr(span: Span, repr: &str) -> proc_macro2::TokenStream {
     match repr {
         "u8" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U8),
-        "u16"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U16),
-        "u32"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U32),
-        "u64"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U64),
-        "i8"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I8),
-        "i16"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I16),
-        "i32"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I32),
-        "i64"=> quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I64),
+        "u16" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U16),
+        "u32" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U32),
+        "u64" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::U64),
+        "i8" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I8),
+        "i16" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I16),
+        "i32" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I32),
+        "i64" => quote_spanned!(span => ::ffi_reflect::FfiEnumUnderlyingType::I64),
         _ => unreachable!(),
     }
 }
