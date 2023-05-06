@@ -11,4 +11,4 @@ keywords = ["ffi"]
 categories = ["development-tools::ffi"]
 
 [dependencies]
-ffi_reflect_derive = {path = "ffi_reflect_derive"}
+ffi_reflect_derive = "1.0.0"
