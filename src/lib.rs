@@ -2,6 +2,7 @@
 
 pub use ffi_reflect_derive::FfiReflect;
 
+/// An enum representing supported FFI types
 #[derive(Clone, Copy, Debug)]
 pub enum FfiType<'x> {
     Primitive(FfiPrimitive),
@@ -12,6 +13,7 @@ pub enum FfiType<'x> {
     Pointer(FfiPointer<'x>),
 }
 
+/// An enum representing supported primitive types
 #[derive(Clone, Copy, Debug)]
 pub enum FfiPrimitive {
     BOOL,
@@ -27,6 +29,7 @@ pub enum FfiPrimitive {
     F64,
 }
 
+/// A struct representing a C-compatible enum
 #[derive(Clone, Copy, Debug)]
 pub struct FfiEnum<'x> {
     pub name: &'x str,
@@ -34,6 +37,7 @@ pub struct FfiEnum<'x> {
     pub values: &'x [FfiEnumItem<'x>],
 }
 
+/// An enum representing the underlying type of a C-compatible enum
 #[derive(Clone, Copy, Debug)]
 pub enum FfiEnumUnderlyingType {
     U8,
@@ -46,12 +50,14 @@ pub enum FfiEnumUnderlyingType {
     I64,
 }
 
+/// A struct representing a numeric enum memeber
 #[derive(Clone, Copy, Debug)]
 pub struct FfiEnumItem<'x> {
     pub name: &'x str,
     pub value: &'x str,
 }
 
+/// A struct representing a C-compatible struct
 #[derive(Clone, Copy, Debug)]
 pub struct FfiStruct<'x> {
     pub name: &'x str,
@@ -60,12 +66,14 @@ pub struct FfiStruct<'x> {
     pub fields: &'x [FfiStructField<'x>]
 }
 
+/// A struct representing a struct field
 #[derive(Clone, Copy, Debug)]
 pub struct FfiStructField<'x> {
     pub field_name: &'x str,
     pub field_type: &'x FfiType<'x>
 }
 
+/// A struct representing a C-compatible array
 #[derive(Clone, Copy, Debug)]
 pub struct FfiArray<'x> {
     pub name: &'x str,
@@ -73,6 +81,7 @@ pub struct FfiArray<'x> {
     pub item_count: usize
 }
 
+/// A struct representing a C-compatible pointer type
 #[derive(Clone, Copy, Debug)]
 pub struct FfiPointer<'x> {
     pub get_type: fn() -> &'x FfiType<'x>,

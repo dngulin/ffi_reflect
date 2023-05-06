@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = ["Danil Gulin <d.nk.gulin@gmail.com>"]
 edition = "2021"
 license = "MIT"
-description = "A derive proc macro implemenation for the `ffi_reflect`. Do not use directly!"
+description = "A derive proc macro counterpart of the `ffi_reflect`"
 repository = "https://github.com/dngulin/ffi_reflect"
 
 [lib]
