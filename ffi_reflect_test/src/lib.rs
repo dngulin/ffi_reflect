@@ -69,7 +69,7 @@ mod tests {
         if let FfiType::Struct(s) = reflect {
             for field in s.fields {
                 if let FfiType::Pointer(p) = field.field_type {
-                    println!("pointer type of the field `{}`:", field.field_name);
+                    println!("The field `{}` actually points to:", field.field_name);
                     println!("{:#?}", (p.get_type)());
                 }
             }

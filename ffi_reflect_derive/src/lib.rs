@@ -1,14 +1,14 @@
-use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::*;
 use syn::spanned::Spanned;
+use syn::punctuated::Punctuated;
 
 
 const PRIMITIVES : &[&str] = &["bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64"];
 
 #[proc_macro_derive(FfiReflect)]
-pub fn derive_ffi_reflect(input: TokenStream) -> TokenStream {
+pub fn derive_ffi_reflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let type_expr = input.ident;
@@ -22,7 +22,7 @@ pub fn derive_ffi_reflect(input: TokenStream) -> TokenStream {
         }
     };
 
-    TokenStream::from(expanded)
+    proc_macro::TokenStream::from(expanded)
 }
 
 fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> proc_macro2::TokenStream {
@@ -63,13 +63,18 @@ fn get_ffi_type_expr(data: &Data, attrs: &[Attribute], type_expr: &Ident) -> pro
 
 fn get_repr_type(attributes: &[Attribute]) -> Option<String> {
     for attribute in attributes {
-        if let Meta::List(list) = attribute.parse_meta().unwrap() {
-            if let Some(attr) = list.path.get_ident() {
-                if attr.to_string().as_str() == "repr" {
-                    if let Some(NestedMeta::Meta(Meta::Path(path))) = list.nested.first() {
-                        if let Some(arg) = path.get_ident() {
-                            return Some(arg.to_string())
-                        }
+        if let AttrStyle::Outer = attribute.style {
+            if !attribute.path().is_ident("repr") {
+                continue;
+            }
+            let parser = Punctuated::<Meta, Token![,]>::parse_terminated;
+            if let Ok(nested) = attribute.parse_args_with(parser) {
+                if nested.len() != 1 {
+                    continue;
+                }
+                if let Some(Meta::Path(first)) = nested.first() {
+                    if let Some(ident) = first.get_ident() {
+                        return Some(ident.to_string())
                     }
                 }
             }
