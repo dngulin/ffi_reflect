@@ -1,6 +1,6 @@
 [package]
 name = "ffi_reflect"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Danil Gulin <d.nk.gulin@gmail.com>"]
 edition = "2021"
 description = "Provides a derive macro that genreates a reflection method for C-comaptible types"
@@ -11,4 +11,4 @@ keywords = ["ffi"]
 categories = ["development-tools::ffi"]
 
 [dependencies]
-ffi_reflect_derive = "1.0.0"
+ffi_reflect_derive = "1.0.1"
