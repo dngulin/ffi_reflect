@@ -1,6 +1,6 @@
 [package]
 name = "ffi_reflect_derive"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Danil Gulin <d.nk.gulin@gmail.com>"]
 edition = "2021"
 license = "MIT"
