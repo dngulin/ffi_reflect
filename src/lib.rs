@@ -1,5 +1,6 @@
 #![no_std]
 
+/// A derive macro that implements `pub const fn ffi_reflect() -> FfiType<'static>`.
 pub use ffi_reflect_derive::FfiReflect;
 
 /// An enum representing supported FFI types
